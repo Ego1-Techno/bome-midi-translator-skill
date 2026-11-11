@@ -1,0 +1,26 @@
+; Example: 7-bit CC → 14-bit Pitch Bend (MCU fader ch1)
+; Source controller channel layout used here: Ch1 = CC, Ch2 = Notes, Ch3 = PC
+
+[x] Preset 0: MCU Fader
+
+[x] Translator 0.0: CC7 ch1 → PitchBend ch1 (14-bit)
+Options: swallow
+Incoming: MIDI B0 07 pp
+Rules:
+  // pp = valeur CC 0..127
+  qq = pp * 128
+  rr = qq & 0x7F
+  pp = qq >> 7
+Outgoing: MIDI E0 rr pp
+
+[x] Translator 0.1: Fader touch (Note 0x68 before move)
+Options: swallow
+Incoming: MIDI 90 24 7F
+Rules:
+Outgoing: MIDI 90 68 7F
+
+[x] Translator 0.2: Fader release
+Options: swallow
+Incoming: MIDI 80 24 00
+Rules:
+Outgoing: MIDI 80 68 00

@@ -1,0 +1,38 @@
+; Example: relative encoder → global parameter, with toggle and LED feedback
+; Signed relative MCU V-Pot (bit6 = direction, bits0-5 = magnitude)
+
+[x] Preset 0: Init
+
+[x] Translator 0.0: Project Open - Init globals
+Options:
+Incoming: Project Open
+Rules:
+  ga = 64
+  gb = 0
+Outgoing: None
+
+[x] Preset 1: Encoder
+
+[x] Translator 1.0: VPot ch1 CC0x10 → global ga (0..127)
+Options: swallow
+Incoming: MIDI B0 10 qq
+Rules:
+  // decode signed relative value
+  rr = qq & 0x40
+  ss = qq & 0x3F
+  if rr == 0 then tt = ss
+  if rr != 0 then tt = 0 - ss
+  // clamp ga to 0..127
+  ga = ga + tt
+  if ga < 0 then ga = 0
+  if ga > 127 then ga = 127
+Outgoing: MIDI B0 07 ga
+
+[x] Translator 1.1: VPot press toggle gb (latch)
+Options: swallow
+Incoming: MIDI 90 20 7F
+Rules:
+  gb = gb ^ 1
+  if gb == 1 then pp = 127
+  if gb == 0 then pp = 0
+Outgoing: Note On on ch. 2 with note:0x24 and velocity:pp, to port Application-1
